@@ -1,0 +1,15 @@
+# Real contact data — lives in Firestore now, keep it out of the repo
+contacts.json
+
+# Local-dev only backend (app talks to Firestore directly in production)
+server.py
+
+# OS / editor cruft
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc

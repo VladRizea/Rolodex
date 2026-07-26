@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Rolodex</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-logo" aria-hidden="true">
+        <svg viewBox="0 0 48 40" width="34" height="28">
+          <rect x="3" y="12" width="42" height="22" rx="7" fill="#6ACBE5" stroke="#111" stroke-width="2.5"/>
+          <line x1="12" y1="18" x2="36" y2="18" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="12" y1="24" x2="30" y2="24" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="24" cy="6" r="3.2" fill="#F9F9F4" stroke="#111" stroke-width="2.5"/>
+          <line x1="24" y1="9" x2="24" y2="13" stroke="#111" stroke-width="2.5"/>
+        </svg>
+      </span>
+      <span class="brand-name">Rolodex</span>
+    </div>
+    <div class="topbar-right">
+      <div class="hint">Scroll or drag to spin</div>
+      <button id="addBtn" class="add-btn" aria-label="Add contact">＋ Add</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="machine" id="rolodex" aria-label="Contact rolodex" tabindex="0">
+
+      <!-- black wire stand / legs -->
+      <svg class="frame" viewBox="0 0 620 320" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <defs>
+          <linearGradient id="wire" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#454b52"/>
+            <stop offset="0.45" stop-color="#181b1e"/>
+            <stop offset="1" stop-color="#000"/>
+          </linearGradient>
+        </defs>
+        <!-- ground shadow -->
+        <ellipse cx="310" cy="292" rx="210" ry="22" fill="rgba(20,23,26,0.18)"/>
+        <!-- back legs (depth) -->
+        <g fill="none" stroke="#0b0d0f" stroke-width="18" stroke-linecap="round">
+          <path d="M150,70 C110,150 120,240 200,270"/>
+          <path d="M470,70 C510,150 500,240 420,270"/>
+        </g>
+        <!-- front sled legs: down from the knobs, curling into runner feet -->
+        <g fill="none" stroke="url(#wire)" stroke-width="24" stroke-linecap="round">
+          <path d="M120,60 C70,140 60,230 95,272 C120,302 150,300 175,278"/>
+          <path d="M500,60 C550,140 560,230 525,272 C500,302 470,300 445,278"/>
+          <!-- front runner joining the feet -->
+          <path d="M110,272 C230,318 390,318 510,272"/>
+        </g>
+      </svg>
+
+      <!-- the rotating card drum -->
+      <div class="barrel">
+        <div class="axle" aria-hidden="true"></div>
+        <div class="hub" aria-hidden="true"></div>
+        <div class="ring" id="ring"></div>
+      </div>
+
+      <!-- side knobs on the axle -->
+      <div class="knob left" aria-hidden="true"></div>
+      <div class="knob right" aria-hidden="true"></div>
+    </div>
+
+    <nav class="controls" aria-label="Rolodex controls">
+      <button class="nav-btn" id="prevBtn" aria-label="Previous card">▲</button>
+      <span class="counter" id="counter">·</span>
+      <button class="nav-btn" id="nextBtn" aria-label="Next card">▼</button>
+    </nav>
+
+    <div class="alpha-rail" id="alphaRail" aria-label="Jump to letter"></div>
+  </main>
+
+  <!-- Firebase (compat build: exposes a global `firebase`, loads before store.js) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script src="store.js"></script>
+  <script src="script.js"></script>
+  <script src="detail.js"></script>
+</body>
+</html>

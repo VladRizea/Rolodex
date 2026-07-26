@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('contacts.json'\\)\\); print\\(len\\(d\\), 'contacts'\\); print\\([c['fullName'] for c in d]\\); print\\('any cards field?', any\\('cards' in c for c in d\\)\\); print\\('generalInfo intact on c01?', 'generalInfo' in d[0]\\)\")",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('contacts.json'\\)\\); [print\\(c['fullName'], '| generalInfo:', repr\\(c.get\\('generalInfo'\\)\\), '| cards:', c.get\\('cards'\\)\\) for c in d if 'cards' in c or c['id']=='c01']\")"
+    ]
+  }
+}
