@@ -28,7 +28,53 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 const contacts = () => db.collection("contacts");
+
+// ---------------------------------------------------------------------------
+// Password gate. There is a single account (yours); the UI only asks for a
+// password, so the email is fixed here. Real security is enforced by the
+// Firestore rules (allow ... if request.auth != null), not by this UI.
+// ---------------------------------------------------------------------------
+const ACCOUNT_EMAIL = "vlad.rizea.stefan@gmail.com";
+
+let _authResolved;
+const authReady = new Promise(resolve => { _authResolved = resolve; });
+
+const gate = () => document.getElementById("authGate");
+const errEl = () => document.getElementById("authError");
+const btnEl = () => document.getElementById("authBtn");
+
+function showGate() { const g = gate(); if (g) g.hidden = false; }
+function hideGate() { const g = gate(); if (g) g.hidden = true; }
+
+auth.onAuthStateChanged(user => {
+  if (user) { hideGate(); _authResolved(); }
+  else { showGate(); }
+});
+
+function wireGate() {
+  const form = document.getElementById("authForm");
+  if (!form) return;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const pw = document.getElementById("authPassword").value;
+    const err = errEl(), btn = btnEl();
+    err.hidden = true;
+    btn.disabled = true;
+    try {
+      await auth.signInWithEmailAndPassword(ACCOUNT_EMAIL, pw);
+      // onAuthStateChanged hides the gate and unblocks the app.
+    } catch (_) {
+      err.textContent = "Wrong password. Try again.";
+      err.hidden = false;
+      document.getElementById("authPassword").select();
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+wireGate();
 
 // Firestore keeps the document id separate from the stored fields. We surface
 // it as `id` so the rest of the app keeps working unchanged.
@@ -38,6 +84,7 @@ function withId(doc) {
 
 window.Store = {
   async list() {
+    await authReady;                    // don't hit Firestore until logged in
     const snap = await contacts().get();
     return snap.docs.map(withId);
   },

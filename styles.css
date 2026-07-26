@@ -22,6 +22,13 @@ html, body {
   overflow: hidden;
   overscroll-behavior: none;
 }
+/* A time-of-day photo (set on <body> by script.js) fills the screen behind the app */
+body {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
 
 /* ---------- Top bar ---------- */
 .topbar {
@@ -828,3 +835,72 @@ body[data-tod="night"] .alpha-rail .alpha.empty { color: #4a5270; }
   .detail-content { padding: 6px 22px 18px; }
   .detail-actions { padding: 14px 22px; }
 }
+
+/* ---------- Password gate ---------- */
+.auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(120% 90% at 50% -10%, #ffffff 0%, var(--cream) 55%, #eef1ea 100%);
+}
+.auth-gate[hidden] { display: none; }
+.auth-card {
+  width: min(360px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 34px 28px 30px;
+  background: var(--cream);
+  border: var(--line) solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: 8px 10px 0 rgba(20, 23, 26, 0.16);
+}
+.auth-logo {
+  display: grid;
+  place-items: center;
+  width: 68px; height: 60px;
+  background: #fff;
+  border: var(--line) solid var(--ink);
+  border-radius: 16px;
+}
+.auth-title { font-size: 26px; font-weight: 700; letter-spacing: 0.5px; }
+.auth-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: #fff;
+  border: var(--line) solid var(--ink);
+  border-radius: 14px;
+  outline: none;
+}
+.auth-input:focus { border-color: var(--blue-deep); }
+.auth-btn {
+  width: 100%;
+  padding: 14px 16px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--blue);
+  border: var(--line) solid var(--ink);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform .08s ease, background .15s ease;
+}
+.auth-btn:hover { background: var(--blue-deep); }
+.auth-btn:active { transform: translateY(2px); }
+.auth-btn:disabled { opacity: 0.6; cursor: default; }
+.auth-error {
+  margin-top: -4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c0392b;
+}
+.auth-error[hidden] { display: none; }

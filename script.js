@@ -119,7 +119,6 @@ function buildCardEl(it) {
           ${c.phone ? `<div class="row"><span class="ico">✆</span><span class="val">${c.phone}</span></div>` : ""}
           ${c.email ? `<div class="row"><span class="ico">✉</span><span class="val">${c.email}</span></div>` : ""}
         </div>
-        ${c.tag ? `<span class="card-tag">${c.tag}</span>` : ""}
       </div>
       <div class="face back"><div class="back-badge">${LOGO_SVG}</div></div>`;
   }
@@ -163,13 +162,22 @@ let angle = 0;
 let velocity = 0;
 let target = null;
 let dragging = false;
+let lastTop = null;   // front-slot index last seen, for the per-card haptic tick
 
 const norm = a => { a %= 360; if (a > 180) a -= 360; if (a < -180) a += 360; return a; };
+
+// A tiny buzz each time a new card reaches the top. Android Chrome only —
+// iOS Safari has no Vibration API, so this is silently ignored on iPhone.
+function buzzTick() {
+  if (navigator.vibrate) navigator.vibrate(8);
+}
 
 function render() {
   if (N === 0) return;
   const w = Math.min(WINDOW, Math.floor((N - 1) / 2));
   const cur = Math.round(-angle / ANGLE_STEP);
+  if (lastTop !== null && cur !== lastTop) buzzTick();   // a card just clicked into the top slot
+  lastTop = cur;
   itemEls.forEach(el => { el.style.display = "none"; });
   for (let o = -w; o <= w; o++) {
     const gi = cur + o;
@@ -252,7 +260,9 @@ function snapToNearest() {
 // ---------- Input: drag (pointer = mouse + touch) ----------
 let lastY = 0;
 let downX = 0, downY = 0, moved = false, downTarget = null;
-const DRAG_SENS = 0.4;
+// Drag is inverted so it feels like grabbing a card and pulling it: drag down
+// and the card you're holding follows down. Applies to both touch and mouse.
+const DRAG_SENS = -0.4;
 
 rolodex.addEventListener("pointerdown", (e) => {
   dragging = true;
@@ -361,12 +371,31 @@ window.RolodexApp = {
 };
 
 // ---------- Time of day: live clock + page ambiance ----------
+// Background photos per period. Static hosting can't list a folder at runtime,
+// so the filenames live here — update these lists when you add/remove images.
+const BG_FOLDER = { dawn: "Morning", day: "Day", dusk: "Evening", night: "Night" };
+const BG_IMAGES = {
+  dawn:  ["images+3.jpg", "images.jpg"],
+  day:   ["IMG_1462.jpg", "images.jpg"],
+  dusk:  ["images_2.jpg", "images.jpg"],
+  night: ["images_2.jpg", "czej8o0cm71g1.jpeg",
+          "1980s-Luxurious-New-York-Nighttime-Office-View_jcoWC.jpg", "images.jpg"],
+};
+function applyBackground(tod) {
+  const list = BG_IMAGES[tod];
+  if (!list || !list.length) return;
+  const file = list[Math.floor(Math.random() * list.length)];
+  const url = `images/${BG_FOLDER[tod]}/${encodeURIComponent(file)}`;
+  document.body.style.backgroundImage = `url("${url}")`;
+}
+
 let lastTod = null;
 function tick() {
   const tod = timeOfDay(new Date().getHours());
   if (tod !== lastTod) {
     lastTod = tod;
     document.body.dataset.tod = tod;
+    applyBackground(tod);                    // pick a fresh random photo for the period
     const g = document.querySelector(".home-greeting");
     if (g) g.textContent = pickGreeting();   // refresh the line when the period turns over
   }

@@ -78,9 +78,30 @@
     <div class="alpha-rail" id="alphaRail" aria-label="Jump to letter"></div>
   </main>
 
+  <!-- Password gate: covers the app until a valid login -->
+  <div id="authGate" class="auth-gate" hidden>
+    <form id="authForm" class="auth-card" autocomplete="on">
+      <span class="brand-logo auth-logo" aria-hidden="true">
+        <svg viewBox="0 0 48 40" width="44" height="36">
+          <rect x="3" y="12" width="42" height="22" rx="7" fill="#6ACBE5" stroke="#111" stroke-width="2.5"/>
+          <line x1="12" y1="18" x2="36" y2="18" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="12" y1="24" x2="30" y2="24" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="24" cy="6" r="3.2" fill="#F9F9F4" stroke="#111" stroke-width="2.5"/>
+          <line x1="24" y1="9" x2="24" y2="13" stroke="#111" stroke-width="2.5"/>
+        </svg>
+      </span>
+      <h1 class="auth-title">Rolodex</h1>
+      <input type="password" id="authPassword" class="auth-input" placeholder="Password"
+             autocomplete="current-password" aria-label="Password" />
+      <button type="submit" class="auth-btn" id="authBtn">Unlock</button>
+      <p class="auth-error" id="authError" role="alert" hidden></p>
+    </form>
+  </div>
+
   <!-- Firebase (compat build: exposes a global `firebase`, loads before store.js) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
   <script src="store.js"></script>
   <script src="script.js"></script>
