@@ -6,25 +6,21 @@
   <title>Rolodex</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=2" />
 </head>
 <body>
+  <!-- Time-of-day sky: gradient lives on <body>, celestial elements injected here -->
+  <div class="sky" id="sky" aria-hidden="true"></div>
+
   <header class="topbar">
     <div class="brand">
       <span class="brand-logo" aria-hidden="true">
-        <svg viewBox="0 0 48 40" width="34" height="28">
-          <rect x="3" y="12" width="42" height="22" rx="7" fill="#6ACBE5" stroke="#111" stroke-width="2.5"/>
-          <line x1="12" y1="18" x2="36" y2="18" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
-          <line x1="12" y1="24" x2="30" y2="24" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
-          <circle cx="24" cy="6" r="3.2" fill="#F9F9F4" stroke="#111" stroke-width="2.5"/>
-          <line x1="24" y1="9" x2="24" y2="13" stroke="#111" stroke-width="2.5"/>
-        </svg>
+        <img src="images/logo.jpg" alt="Rolodex" />
       </span>
       <span class="brand-name">Rolodex</span>
     </div>
     <div class="topbar-right">
-      <div class="hint">Scroll or drag to spin</div>
       <button id="addBtn" class="add-btn" aria-label="Add contact">＋ Add</button>
     </div>
   </header>
@@ -82,13 +78,7 @@
   <div id="authGate" class="auth-gate" hidden>
     <form id="authForm" class="auth-card" autocomplete="on">
       <span class="brand-logo auth-logo" aria-hidden="true">
-        <svg viewBox="0 0 48 40" width="44" height="36">
-          <rect x="3" y="12" width="42" height="22" rx="7" fill="#6ACBE5" stroke="#111" stroke-width="2.5"/>
-          <line x1="12" y1="18" x2="36" y2="18" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
-          <line x1="12" y1="24" x2="30" y2="24" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
-          <circle cx="24" cy="6" r="3.2" fill="#F9F9F4" stroke="#111" stroke-width="2.5"/>
-          <line x1="24" y1="9" x2="24" y2="13" stroke="#111" stroke-width="2.5"/>
-        </svg>
+        <img src="images/logo.jpg" alt="Rolodex" />
       </span>
       <h1 class="auth-title">Rolodex</h1>
       <input type="password" id="authPassword" class="auth-input" placeholder="Password"
@@ -103,8 +93,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
-  <script src="store.js"></script>
-  <script src="script.js"></script>
-  <script src="detail.js"></script>
+  <script src="store.js?v=2"></script>
+  <script src="script.js?v=2"></script>
+  <script src="detail.js?v=2"></script>
 </body>
 </html>

@@ -22,15 +22,36 @@ function shape(pos) {
   return pos - EXTRA * ease;
 }
 
-const LOGO_SVG = `<svg viewBox="0 0 48 40" width="40" height="34" aria-hidden="true">
-  <rect x="3" y="12" width="42" height="22" rx="7" fill="#6ACBE5" stroke="#111" stroke-width="2.5"/>
-  <line x1="12" y1="18" x2="36" y2="18" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="12" y1="24" x2="30" y2="24" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
-</svg>`;
+const LOGO_SVG = `<img src="images/logo.jpg" alt="Rolodex" />`;
 
 // ---------- Contact helpers ----------
 const lastName = c => (c.fullName || "").trim().split(/\s+/).slice(-1)[0] || "";
 const initialsOf = name => (name || "").split(/\s+/).map(w => w[0] || "").join("").slice(0, 2).toUpperCase();
+// Readable text colour (ink or bone) for a given accent background — the palette
+// mixes light and dark accents, so avatar initials must adapt.
+function inkOn(hex) {
+  const h = (hex || "").replace("#", "");
+  if (h.length < 6) return "#0a0908";
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.55 ? "#0a0908" : "#f3ece1";
+}
+
+// The only card colours the app uses. Any legacy/other accent is coerced into
+// this palette so no old pastel ever shows.
+const CARD_ACCENTS = ["#af9164", "#f7f3e3", "#b3b6b7", "#6f1a07", "#2b2118"];
+const DEFAULT_ACCENT = "#af9164";
+const LEGACY_ACCENT_MAP = {
+  "#eb6f63": "#6f1a07", "#f2c14e": "#af9164", "#6acbe5": "#b3b6b7",
+  "#7bc96f": "#af9164", "#b692e0": "#2b2118",
+  "#0a0908": "#2b2118", "#22333b": "#b3b6b7", "#eae0d5": "#f7f3e3",
+  "#c6ac8f": "#af9164", "#5e503f": "#2b2118",
+};
+function paletteAccent(a) {
+  const u = (a || "").toLowerCase();
+  if (CARD_ACCENTS.includes(u)) return u;
+  return LEGACY_ACCENT_MAP[u] || DEFAULT_ACCENT;
+}
 // what the small card shows as the subtitle line
 function cardSubtitle(c) {
   if (c.relationship === "Business") {
@@ -104,12 +125,13 @@ function buildCardEl(it) {
     const c = it.data;
     el.className = "card";
     el.dataset.id = c.id;
-    el.style.setProperty("--card-accent", c.accent || "#6ACBE5");
+    const accent = paletteAccent(c.accent);
+    el.style.setProperty("--card-accent", accent);
     el.innerHTML = `
       <div class="face front">
         <span class="accent"></span>
         <div class="card-head">
-          <div class="avatar">${initialsOf(c.fullName)}</div>
+          <div class="avatar" style="color:${inkOn(accent)}">${initialsOf(c.fullName)}</div>
           <div class="who">
             <div class="name">${c.fullName || ""}</div>
             <div class="title">${cardSubtitle(c)}</div>
@@ -130,16 +152,14 @@ function buildReel(contacts) {
     lastName(a).localeCompare(lastName(b)) || (a.fullName || "").localeCompare(b.fullName || ""));
   items = [];
   Object.keys(byId).forEach(k => delete byId[k]);
-  let prev = null;
   for (const c of sorted) {
     byId[c.id] = c;
     const L = (lastName(c)[0] || "#").toUpperCase();
-    if (L !== prev) { items.push({ type: "divider", letter: L }); prev = L; }
     items.push({ type: "contact", letter: L, data: c });
   }
   items.unshift({ type: "home" });   // greeting + search + clock, first on the drum
   N = items.length;
-  presentLetters = new Set(items.filter(it => it.type === "divider").map(it => it.letter));
+  presentLetters = new Set(items.filter(it => it.type === "contact").map(it => it.letter));
   ring.innerHTML = "";
   itemEls = items.map(it => { const el = buildCardEl(it); ring.appendChild(el); return el; });
 }
@@ -306,7 +326,7 @@ let wheelTimer = null;
 rolodex.addEventListener("wheel", (e) => {
   e.preventDefault();
   target = null;
-  angle += e.deltaY * 0.22;
+  angle -= e.deltaY * 0.22;   // scroll down advances forward (A → Z), matching the buttons
   velocity = 0;
   render();
   clearTimeout(wheelTimer);
@@ -371,22 +391,43 @@ window.RolodexApp = {
 };
 
 // ---------- Time of day: live clock + page ambiance ----------
-// Background photos per period. Static hosting can't list a folder at runtime,
-// so the filenames live here — update these lists when you add/remove images.
-const BG_FOLDER = { dawn: "Morning", day: "Day", dusk: "Evening", night: "Night" };
-const BG_IMAGES = {
-  dawn:  ["images+3.jpg", "images.jpg"],
-  day:   ["IMG_1462.jpg", "images.jpg"],
-  dusk:  ["images_2.jpg", "images.jpg"],
-  night: ["images_2.jpg", "czej8o0cm71g1.jpeg",
-          "1980s-Luxurious-New-York-Nighttime-Office-View_jcoWC.jpg", "images.jpg"],
-};
-function applyBackground(tod) {
-  const list = BG_IMAGES[tod];
-  if (!list || !list.length) return;
-  const file = list[Math.floor(Math.random() * list.length)];
-  const url = `images/${BG_FOLDER[tod]}/${encodeURIComponent(file)}`;
-  document.body.style.backgroundImage = `url("${url}")`;
+// Paints the sky for the current period: a moon + stars at night, a sun (with
+// light rays at the golden hours) otherwise. The gradient itself lives in CSS.
+const sky = document.getElementById("sky");
+function renderSky(tod) {
+  if (!sky) return;
+  sky.innerHTML = "";
+  sky.dataset.tod = tod;
+
+  if (tod === "night") {
+    const moon = document.createElement("div");
+    moon.className = "orb moon";
+    sky.appendChild(moon);
+
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < 90; i++) {
+      const s = document.createElement("div");
+      s.className = "star";
+      const size = (Math.random() * 1.8 + 0.8).toFixed(2);
+      s.style.left = (Math.random() * 100).toFixed(2) + "%";
+      s.style.top = (Math.random() * 72).toFixed(2) + "%";
+      s.style.width = s.style.height = size + "px";
+      s.style.setProperty("--tw", (Math.random() * 3 + 2).toFixed(2) + "s");
+      s.style.animationDelay = (Math.random() * 3).toFixed(2) + "s";
+      frag.appendChild(s);
+    }
+    sky.appendChild(frag);
+    return;
+  }
+
+  const sun = document.createElement("div");
+  sun.className = "orb sun";
+  sky.appendChild(sun);
+  if (tod === "dawn" || tod === "dusk") {
+    const rays = document.createElement("div");
+    rays.className = "rays";
+    sky.appendChild(rays);
+  }
 }
 
 let lastTod = null;
@@ -395,7 +436,7 @@ function tick() {
   if (tod !== lastTod) {
     lastTod = tod;
     document.body.dataset.tod = tod;
-    applyBackground(tod);                    // pick a fresh random photo for the period
+    renderSky(tod);                          // repaint the sky for the new period
     const g = document.querySelector(".home-greeting");
     if (g) g.textContent = pickGreeting();   // refresh the line when the period turns over
   }

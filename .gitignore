@@ -4,6 +4,10 @@ contacts.json
 # Local-dev only backend (app talks to Firestore directly in production)
 server.py
 
+# Background photos are no longer used by the app — but keep the logo
+images/*
+!images/logo.jpg
+
 # OS / editor cruft
 .DS_Store
 *.swp

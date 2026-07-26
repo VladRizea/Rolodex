@@ -20,7 +20,8 @@ const FIELDS = [
   { key: "dislikes", label: "Dislikes", type: "textarea" },
 ];
 const LONG = new Set(["likes", "dislikes"]);
-const ACCENTS = ["#EB6F63", "#F2C14E", "#6ACBE5", "#7BC96F", "#B692E0"];
+// CARD_ACCENTS, DEFAULT_ACCENT and paletteAccent() come from script.js (loaded first)
+const ACCENTS = CARD_ACCENTS;
 
 // Fields (in save order) exposed to the AI import/bulk-update round trip, with a
 // short human description so the AI knows what each key means.
@@ -156,11 +157,13 @@ function centerRect(w, h) {
 
 // ---------- header ----------
 function paintHeader(c) {
+  const accent = paletteAccent(c.accent);
   avatarEl.textContent = initialsOf(c.fullName) || "＋";
-  avatarEl.style.background = c.accent || "#6ACBE5";
+  avatarEl.style.background = accent;
+  avatarEl.style.color = inkOn(accent);
   nameEl.textContent = c.fullName || "New contact";
   subEl.textContent = subtitleOf(c);
-  panel.style.setProperty("--card-accent", c.accent || "#6ACBE5");
+  panel.style.setProperty("--card-accent", accent);
 }
 
 // ---------- cards drawer (read view) ----------
@@ -259,7 +262,7 @@ function renderEdit() {
   mode = "edit";
   paintHeader(current);
   const swatches = ACCENTS.map(a =>
-    `<button type="button" class="swatch ${a === (current.accent || ACCENTS[2]) ? "on" : ""}" data-accent="${a}" style="background:${a}"></button>`).join("");
+    `<button type="button" class="swatch ${a === paletteAccent(current.accent) ? "on" : ""}" data-accent="${a}" style="background:${a}"></button>`).join("");
   const rows = FIELDS.map(f => {
     const hide = f.businessOnly && !isBusiness(current);
     return `<label class="field field-${f.key}" ${hide ? "hidden" : ""}>
@@ -557,7 +560,7 @@ function open(contact, sourceEl) {
 }
 
 function openNew() {
-  current = normalize({ relationship: "Business", accent: ACCENTS[2] });
+  current = normalize({ relationship: "Business", accent: DEFAULT_ACCENT });
   sourceRect = centerRect(Math.min(320, window.innerWidth - 60), 240);
   renderEdit();
   animateOpen();
