@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="styles.css?v=10" />
 </head>
 <body>
   <!-- Time-of-day sky: gradient lives on <body>, celestial elements injected here -->
@@ -24,6 +24,9 @@
   </header>
 
   <main class="stage">
+    <!-- Where the home card docks (pinned above the drum) while a search is active -->
+    <div class="search-dock" id="searchDock" aria-hidden="true"></div>
+
     <div class="machine" id="rolodex" aria-label="Contact rolodex" tabindex="0">
 
       <!-- black wire stand / legs -->
@@ -89,8 +92,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
-  <script src="store.js?v=7"></script>
-  <script src="script.js?v=7"></script>
-  <script src="detail.js?v=7"></script>
+  <script src="store.js?v=10"></script>
+  <script src="script.js?v=10"></script>
+  <script src="detail.js?v=10"></script>
 </body>
 </html>

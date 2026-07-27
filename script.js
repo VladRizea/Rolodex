@@ -9,7 +9,11 @@ const stage = document.querySelector(".stage");
 // ---------- Drum geometry ----------
 const ANGLE_STEP = 44;   // degrees between neighbouring cards on the drum (bigger = more fan)
 const READ_GAP = 90;     // degrees between the top (reading) card and the one just below it
-const WINDOW = 3;        // cards shown each side of the front one
+// Cards shown each side of the front one. Mobile renders two fewer total (2 vs 3
+// per side) to keep the 3D drum smooth on phones. Read live each frame so a
+// rotate / resize always uses the right count.
+const mqMobile = window.matchMedia("(max-width: 640px)");
+const cardsPerSide = () => (mqMobile.matches ? 2 : 3);
 const HUB = 46;          // radius of the central drum (must match --hub in CSS)
 const EXTRA = READ_GAP - ANGLE_STEP;   // extra angle opened just below the front card
 
@@ -84,36 +88,107 @@ function nowTime() {
 }
 
 // ---------- Reel state ----------
-let items = [];            // [{type:'divider'|'contact', letter, data?}]
+let allContacts = [];      // every contact, unfiltered (the search filters this)
+let items = [];            // [{type:'home'|'contact', letter, data?}]
 let itemEls = [];          // sparse cache: index -> built element (built lazily, reused)
 const mounted = new Map(); // index -> element currently attached to the ring
 let N = 0;
 let presentLetters = new Set();
 const byId = {};
 
+// ---------- Search / fuzzy matching ----------
+let searchQuery = "";       // raw text in the search box
+let searchOpen = false;     // is the search card docked on top? (stays open even when text is empty)
+const searchDock = document.getElementById("searchDock");
+
+// Lower-case + strip diacritics, so "Nicolae" matches "nicolae" and "Ștefan" ≈ "stefan".
+function fold(s) {
+  return (s || "").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+// How well a single query token matches one word. Higher = better; -Infinity = no match.
+// Handles: exact, prefix ("Mar" → "Marius"), substring, and loose subsequence typos.
+function scoreTokenWord(tok, word) {
+  if (word === tok) return 100;
+  if (word.startsWith(tok)) return 85;
+  const idx = word.indexOf(tok);
+  if (idx >= 0) return 62 - Math.min(idx, 20);
+  // subsequence fuzzy: every char of tok appears in order somewhere in word
+  let ti = 0;
+  for (let wi = 0; wi < word.length && ti < tok.length; wi++) {
+    if (word[wi] === tok[ti]) ti++;
+  }
+  if (ti === tok.length) return Math.max(8, 30 - (word.length - tok.length));
+  return -Infinity;
+}
+
+// Score a contact against the query tokens. Every token must match SOMETHING
+// (AND), so "Marius Nicolae" needs both names; returns -Infinity to exclude.
+// Name fields are weighted above company/role/etc. so a name hit ranks first.
+function contactScore(c, tokens) {
+  const nameWords = fold(c.fullName).split(/\s+/).filter(Boolean);
+  const extra = [c.company, c.jobRole, c.email, c.city, c.country, c.relationship, c.tag]
+    .filter(Boolean).map(fold).join(" ");
+  const extraWords = extra.split(/\s+/).filter(Boolean);
+  let total = 0;
+  for (const tok of tokens) {
+    let best = -Infinity;
+    for (const w of nameWords)  best = Math.max(best, scoreTokenWord(tok, w) + 25);  // name bonus
+    for (const w of extraWords) best = Math.max(best, scoreTokenWord(tok, w));
+    if (best === -Infinity) return -Infinity;   // this token matched no field → drop contact
+    total += best;
+  }
+  return total;
+}
+
+function searchResults(query) {
+  const tokens = fold(query).split(/\s+/).filter(Boolean);
+  if (!tokens.length) return [];
+  return allContacts
+    .map(c => ({ c, s: contactScore(c, tokens) }))
+    .filter(o => o.s > -Infinity)
+    .sort((a, b) => b.s - a.s || lastName(a.c).localeCompare(lastName(b.c)))
+    .map(o => o.c);
+}
+
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const alphaRail = document.getElementById("alphaRail");
 const railEls = {};
 
-function buildCardEl(it) {
-  const el = document.createElement("article");
-  if (it.type === "home") {
-    el.className = "card home";
-    el.innerHTML = `
-      <div class="face front home-front">
-        <div class="home-greeting">${pickGreeting()}</div>
-        <div class="home-search">
-          <span class="home-search-ico" aria-hidden="true">⌕</span>
-          <input class="home-search-input" type="text" placeholder="Search contacts…" aria-label="Search contacts" />
-        </div>
-        <div class="home-time">${nowTime()}</div>
+// The home card (greeting + search + clock) is built ONCE and kept alive for the
+// life of the page. It hops between the drum (index 0) and the search dock, but
+// it's always the same element — so the search input never loses focus mid-type.
+let homeEl = null;
+function getHomeEl() {
+  if (homeEl) return homeEl;
+  homeEl = document.createElement("article");
+  homeEl.className = "card home";
+  homeEl.innerHTML = `
+    <div class="face front home-front">
+      <div class="home-greeting">${pickGreeting()}</div>
+      <div class="home-search">
+        <span class="home-search-ico" aria-hidden="true">⌕</span>
+        <input class="home-search-input" type="text" placeholder="Search contacts…" aria-label="Search contacts" />
+        <button type="button" class="home-search-clear" aria-label="Clear search" tabindex="-1">×</button>
       </div>
-      <div class="face back"><div class="back-badge">${LOGO_SVG}</div></div>`;
-    // keep taps on the search field from spinning / opening the drum
-    const si = el.querySelector(".home-search-input");
-    ["pointerdown", "pointerup", "click"].forEach(t => si.addEventListener(t, e => e.stopPropagation()));
-    return el;
-  }
+      <div class="home-time">${nowTime()}</div>
+    </div>
+    <div class="face back"><div class="back-badge">${LOGO_SVG}</div></div>`;
+  const si = homeEl.querySelector(".home-search-input");
+  // keep taps on the search field from spinning / opening the drum
+  ["pointerdown", "pointerup", "click"].forEach(t => si.addEventListener(t, e => e.stopPropagation()));
+  si.addEventListener("input", () => onSearchInput(si.value));
+  si.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSearch(); });
+  const clr = homeEl.querySelector(".home-search-clear");
+  ["pointerdown", "pointerup", "click"].forEach(t => clr.addEventListener(t, e => e.stopPropagation()));
+  // The × only clears the text — it does NOT dismiss search (the card stays docked).
+  clr.addEventListener("click", (e) => { e.preventDefault(); clearSearchText(); });
+  return homeEl;
+}
+
+function buildCardEl(it) {
+  if (it.type === "home") return getHomeEl();
+  const el = document.createElement("article");
   if (it.type === "divider") {
     el.className = "card divider";
     el.innerHTML = `
@@ -148,21 +223,33 @@ function buildCardEl(it) {
   return el;
 }
 
-function buildReel(contacts) {
-  const sorted = [...contacts].sort((a, b) =>
-    lastName(a).localeCompare(lastName(b)) || (a.fullName || "").localeCompare(b.fullName || ""));
-  sorted.reverse();   // reversed running order, per request
+// Rebuild the reel from `allContacts`, honouring the current search. While
+// searching, the home card leaves the drum (it's docked on top) and only the
+// matching contacts remain — best match first. With no search it's the full,
+// alphabetically-reversed run with the home card at index 0.
+function buildReel() {
+  const q = searchQuery.trim();
+  let ordered;
+  if (q) {
+    ordered = searchResults(searchQuery);   // filtered + ranked, best match first
+  } else {
+    ordered = [...allContacts].sort((a, b) =>
+      lastName(a).localeCompare(lastName(b)) || (a.fullName || "").localeCompare(b.fullName || ""));
+    ordered.reverse();   // reversed running order, per request
+  }
   items = [];
   Object.keys(byId).forEach(k => delete byId[k]);
-  for (const c of sorted) {
+  for (const c of ordered) {
     byId[c.id] = c;
     const L = (lastName(c)[0] || "#").toUpperCase();
     items.push({ type: "contact", letter: L, data: c });
   }
-  items.unshift({ type: "home" });   // greeting + search + clock, first on the drum
+  // The home card only lives in the drum when search is closed; while it's docked
+  // on top the drum is pure contacts (all of them when the box is empty).
+  if (!searchOpen) items.unshift({ type: "home" });
   N = items.length;
   presentLetters = new Set(items.filter(it => it.type === "contact").map(it => it.letter));
-  ring.innerHTML = "";
+  ring.innerHTML = "";   // detaches old contact cards; the docked home card is untouched
   itemEls = new Array(N);   // built lazily as cards scroll into view
   mounted.clear();
 }
@@ -207,8 +294,8 @@ function buzzTick() {
 }
 
 function render() {
-  if (N === 0) return;
-  const w = Math.min(WINDOW, Math.floor((N - 1) / 2));
+  if (N === 0) { counter.textContent = searchQuery.trim() ? "∅" : "·"; return; }
+  const w = Math.min(cardsPerSide(), Math.floor((N - 1) / 2));
   const cur = Math.round(-angle / ANGLE_STEP);
   if (lastTop !== null && cur !== lastTop) buzzTick();   // a card just clicked into the top slot
   lastTop = cur;
@@ -394,10 +481,82 @@ rolodex.addEventListener("keydown", (e) => {
   if (e.key === "ArrowDown") { go(1); e.preventDefault(); }
 });
 
+// ---------- Search: enter/leave search mode ----------
+// Rebuild the reel for the current search state and place the home card either on
+// the dock (open) or back in the drum (closed). `keepCaret` restores focus/caret
+// after the reparent so typing never stutters.
+function renderSearch(keepCaret) {
+  const input = homeEl && homeEl.querySelector(".home-search-input");
+  const caret = input ? [input.selectionStart, input.selectionEnd] : null;
+
+  document.body.classList.toggle("searching", searchOpen);
+  homeEl.classList.toggle("search-active", searchOpen);
+
+  buildReel();
+  buildRail();
+
+  if (searchOpen) {
+    // shed the inline transform / z-index / pointer-events render() left on the card
+    homeEl.style.transform = "";
+    homeEl.style.zIndex = "";
+    homeEl.style.pointerEvents = "";
+    homeEl.style.removeProperty("--shade");
+    if (homeEl.parentElement !== searchDock) searchDock.appendChild(homeEl);   // lift onto the dock
+  }
+  // Always show the top of the reel — best match / first card sits in the reading slot.
+  angle = 0; target = null; velocity = 0; lastTop = null;
+  render();   // when closing, mountCard(0) reparents the home card back into the drum
+
+  if (input && searchOpen && keepCaret) {
+    input.focus();
+    if (caret) { try { input.setSelectionRange(caret[0], caret[1]); } catch (_) {} }
+  }
+}
+
+// Typing in the box: the first non-empty keystroke opens search; deleting all the
+// text keeps it open (drum just shows every contact) until it's dismissed.
+function onSearchInput(value) {
+  searchQuery = value;
+  if (value.trim()) searchOpen = true;
+  renderSearch(true);
+}
+
+// The × button: wipe the text but stay in search mode.
+function clearSearchText() {
+  const input = homeEl.querySelector(".home-search-input");
+  if (input) input.value = "";
+  searchQuery = "";
+  renderSearch(true);
+  if (input) input.focus();
+}
+
+// Fully dismiss search: clear the box, send the home card back to the drum and
+// park on it. Safe to call when search isn't open (just returns to the home card).
+function closeSearch() {
+  const input = homeEl.querySelector(".home-search-input");
+  if (input) input.value = "";
+  searchQuery = "";
+  searchOpen = false;
+  renderSearch(false);
+  if (input) input.blur();   // let the mobile keyboard drop
+}
+
+// Clicking the brand (logo + "Rolodex") always resets search and returns to the
+// default home card — whether or not search is currently open.
+const brand = document.querySelector(".brand");
+if (brand) {
+  brand.style.cursor = "pointer";
+  brand.addEventListener("click", closeSearch);
+}
+
+// Re-render when the viewport crosses the phone/desktop breakpoint so the drum
+// sheds (or regains) its outer cards immediately.
+mqMobile.addEventListener?.("change", () => render());
+
 // ---------- Public app API (used by detail.js) ----------
 async function refresh(focusId) {
-  const contacts = await window.Store.list();
-  buildReel(contacts);
+  allContacts = await window.Store.list();
+  buildReel();
   buildRail();
   if (focusId != null) {
     const j = items.findIndex(it => it.type === "contact" && it.data.id === focusId);
