@@ -2,6 +2,8 @@
   --serif: "Space Grotesk", system-ui, -apple-system, sans-serif;
   --sans: "Space Grotesk", system-ui, -apple-system, sans-serif;
   --font: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  /* High-contrast display serif reserved for the logo monogram only. */
+  --logo-face: "Playfair Display", "Bodoni 72", "Didot", "Hoefler Text", Georgia, serif;
 
   /* Palette: #0a0908 #22333b #eae0d5 #c6ac8f #5e503f */
   --paper: #eae0d5;          /* card stock / bone */
@@ -147,15 +149,40 @@ html, body {
 .brand-logo {
   display: grid;
   place-items: center;
-  width: 50px; height: 44px;
-  background: #f4f4f2;
-  border: var(--line) solid var(--hair);
-  border-radius: 8px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.22);
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  /* oxblood wax-seal disc */
+  background: radial-gradient(120% 120% at 32% 26%, #8f2a12 0%, var(--brass) 42%, var(--brass-deep) 100%);
+  /* thin brass inner ring + soft lift */
+  box-shadow:
+    inset 0 0 0 1.5px rgba(175,145,100,0.55),
+    inset 0 1px 1px rgba(255,255,255,0.25),
+    0 3px 10px rgba(0,0,0,0.28);
   overflow: hidden;
 }
-.brand-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.back-badge img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+/* The "R" monogram, shared by the header, the password gate and the card backs. */
+.brand-logo {
+  font-family: var(--logo-face);
+  font-weight: 700;
+  font-size: 25px;
+  line-height: 1;
+  color: #f3ece1;                                  /* bone letter on the oxblood seal */
+  text-shadow: 0 1px 1px rgba(0,0,0,0.35);
+  padding-left: 0.5px;                             /* optical centring of the serif R */
+}
+.auth-logo {
+  width: 58px; height: 58px;
+  font-size: 34px;
+}
+.back-badge .logo-r {
+  font-family: var(--logo-face);
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1;
+  color: var(--brass);
+  padding-left: 1px;
+  transform: scaleX(-1);   /* the card back is rotateY(180°); flip the R back to readable */
+}
 .brand-name {
   font-family: var(--serif);
   font-size: 27px;
@@ -1015,13 +1042,7 @@ body[data-tod="dusk"] .counter {
   box-shadow: 0 30px 60px rgba(0,0,0,0.5);
 }
 .auth-logo {
-  display: grid;
-  place-items: center;
-  width: 66px; height: 58px;
-  background: #f4f4f2;
-  border: 1px solid var(--brass);
-  border-radius: 8px;
-  overflow: hidden;
+  width: 60px; height: 60px;
 }
 .auth-title {
   font-family: var(--serif);

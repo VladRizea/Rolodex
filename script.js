@@ -22,7 +22,7 @@ function shape(pos) {
   return pos - EXTRA * ease;
 }
 
-const LOGO_SVG = `<img src="logo.jpg" alt="Rolodex" />`;
+const LOGO_SVG = `<span class="logo-r" aria-hidden="true">R</span>`;
 
 // ---------- Contact helpers ----------
 const lastName = c => (c.fullName || "").trim().split(/\s+/).slice(-1)[0] || "";
@@ -85,7 +85,8 @@ function nowTime() {
 
 // ---------- Reel state ----------
 let items = [];            // [{type:'divider'|'contact', letter, data?}]
-let itemEls = [];
+let itemEls = [];          // sparse cache: index -> built element (built lazily, reused)
+const mounted = new Map(); // index -> element currently attached to the ring
 let N = 0;
 let presentLetters = new Set();
 const byId = {};
@@ -162,7 +163,19 @@ function buildReel(contacts) {
   N = items.length;
   presentLetters = new Set(items.filter(it => it.type === "contact").map(it => it.letter));
   ring.innerHTML = "";
-  itemEls = items.map(it => { const el = buildCardEl(it); ring.appendChild(el); return el; });
+  itemEls = new Array(N);   // built lazily as cards scroll into view
+  mounted.clear();
+}
+
+// Build (once) and attach the card for a given index. Cached elements are reused,
+// so a card re-entering the window costs nothing but an appendChild.
+function mountCard(idx) {
+  let el = mounted.get(idx);
+  if (el) return el;
+  el = itemEls[idx] || (itemEls[idx] = buildCardEl(items[idx]));
+  ring.appendChild(el);
+  mounted.set(idx, el);
+  return el;
 }
 
 function buildRail() {
@@ -199,19 +212,25 @@ function render() {
   const cur = Math.round(-angle / ANGLE_STEP);
   if (lastTop !== null && cur !== lastTop) buzzTick();   // a card just clicked into the top slot
   lastTop = cur;
-  itemEls.forEach(el => { el.style.display = "none"; });
+  // Only the window's cards (front ± WINDOW, which already includes the next card
+  // about to appear) are ever in the DOM. Everything else stays unmounted.
+  const wanted = new Set();
   for (let o = -w; o <= w; o++) {
     const gi = cur + o;
     const idx = ((gi % N) + N) % N;
-    const el = itemEls[idx];
+    wanted.add(idx);
+    const el = mountCard(idx);
     const raw = gi * ANGLE_STEP + angle;
     const pos = shape(raw);
     const eff = Math.abs(pos);
-    el.style.display = "";
     el.style.transform = `rotateX(${pos}deg) translateY(${-HUB}px)`;
     el.style.setProperty("--shade", (Math.min(eff, 150) / 150 * 0.5).toFixed(3));
     el.style.zIndex = String(Math.round(400 - eff));
     el.style.pointerEvents = Math.abs(raw) < 20 ? "auto" : "none";
+  }
+  // Retire cards that scrolled out of the window so they cost nothing to paint.
+  for (const [idx, el] of mounted) {
+    if (!wanted.has(idx)) { el.remove(); mounted.delete(idx); }
   }
   updateStatus();
 }

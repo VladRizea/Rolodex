@@ -6,8 +6,8 @@
   <title>Rolodex</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=5" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=7" />
 </head>
 <body>
   <!-- Time-of-day sky: gradient lives on <body>, celestial elements injected here -->
@@ -15,9 +15,7 @@
 
   <header class="topbar">
     <div class="brand">
-      <span class="brand-logo" aria-hidden="true">
-        <img src="logo.jpg" alt="Rolodex" />
-      </span>
+      <span class="brand-logo" aria-hidden="true">R</span>
       <span class="brand-name">Rolodex</span>
     </div>
     <div class="topbar-right">
@@ -77,9 +75,7 @@
   <!-- Password gate: covers the app until a valid login -->
   <div id="authGate" class="auth-gate" hidden>
     <form id="authForm" class="auth-card" autocomplete="on">
-      <span class="brand-logo auth-logo" aria-hidden="true">
-        <img src="logo.jpg" alt="Rolodex" />
-      </span>
+      <span class="brand-logo auth-logo" aria-hidden="true">R</span>
       <h1 class="auth-title">Rolodex</h1>
       <input type="password" id="authPassword" class="auth-input" placeholder="Password"
              autocomplete="current-password" aria-label="Password" />
@@ -93,8 +89,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
-  <script src="store.js?v=5"></script>
-  <script src="script.js?v=5"></script>
-  <script src="detail.js?v=5"></script>
+  <script src="store.js?v=7"></script>
+  <script src="script.js?v=7"></script>
+  <script src="detail.js?v=7"></script>
 </body>
 </html>
