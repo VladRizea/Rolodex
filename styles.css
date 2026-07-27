@@ -1,6 +1,7 @@
 :root {
-  --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
-  --sans: "Inter", system-ui, -apple-system, sans-serif;
+  --serif: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --sans: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font: "Space Grotesk", system-ui, -apple-system, sans-serif;
 
   /* Palette: #0a0908 #22333b #eae0d5 #c6ac8f #5e503f */
   --paper: #eae0d5;          /* card stock / bone */
@@ -9,12 +10,12 @@
   --ink: #0a0908;            /* near-black ink */
   --ink-soft: #5e503f;       /* secondary engraved text (dark taupe) */
   --slate: #22333b;          /* dark accent surface */
-  --brass: #c6ac8f;          /* warm accent (tan) */
-  --brass-deep: #5e503f;
+  --brass: #6f1a07;          /* oxblood accent (editorial, from the palette) */
+  --brass-deep: #4f1205;
   --hair: rgba(10, 9, 8, 0.45);     /* hairline borders */
-  /* Legacy accent hooks (used across detail/editor) mapped to tan */
-  --blue: #c6ac8f;
-  --blue-deep: #a68a68;
+  /* Legacy accent hooks (used across detail/editor) mapped to oxblood */
+  --blue: #6f1a07;
+  --blue-deep: #4f1205;
 
   --line: 1.5px;
   --card-w: 360px;
@@ -92,7 +93,7 @@ html, body {
 /* Light rays fanning from the sun at the golden hours */
 .rays {
   position: absolute;
-  width: 220vmax; height: 220vmax;
+  width: 160vmax; height: 160vmax;
   left: 50%; top: 62%;
   transform: translate(-50%, -50%);
   background: repeating-conic-gradient(
@@ -100,8 +101,7 @@ html, body {
     rgba(255,220,170,0.10) 0deg 3deg,
     rgba(255,220,170,0) 3deg 11deg);
   mix-blend-mode: screen;
-  opacity: 0.7;
-  animation: rays-spin 120s linear infinite;
+  opacity: 0.6;
 }
 .sky[data-tod="dusk"] .rays {
   top: 64%; left: 70%;
@@ -111,7 +111,11 @@ html, body {
     rgba(255,150,100,0) 3deg 12deg);
 }
 .sky[data-tod="dawn"] .rays { top: 60%; left: 30%; }
-@keyframes rays-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+/* Mobile: drop the most expensive sky effects to keep the drum smooth */
+@media (max-width: 640px) {
+  .rays { display: none; }
+  .star { animation: none; opacity: 0.8; }
+}
 /* Stars */
 .star {
   position: absolute;
@@ -156,15 +160,13 @@ html, body {
   font-family: var(--serif);
   font-size: 27px;
   font-weight: 600;
-  font-variant: small-caps;
-  letter-spacing: 3px;
+  letter-spacing: 0.2px;
   color: var(--ink);
 }
 .topbar-right { display: flex; align-items: center; gap: 12px; }
 .hint {
   font-family: var(--serif);
   font-size: 14px;
-  font-variant: small-caps;
   letter-spacing: 1.2px;
   color: #4b4638;
   background: rgba(255,255,255,0.55);
@@ -177,10 +179,9 @@ html, body {
   font-family: var(--serif);
   font-size: 15px;
   font-weight: 600;
-  font-variant: small-caps;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.2px;
   color: var(--paper-2);
-  background: linear-gradient(180deg, #2b3d47, #142128);
+  background: #6f1a07;
   border: 1px solid var(--ink);
   border-radius: 4px;
   padding: 8px 18px;
@@ -188,7 +189,7 @@ html, body {
   box-shadow: 0 3px 10px rgba(0,0,0,0.28);
   transition: transform .08s ease, box-shadow .12s ease, background .15s ease;
 }
-.add-btn:hover { background: linear-gradient(180deg, #354a56, #1d2e36); }
+.add-btn:hover { background: #8a2310; }
 .add-btn:active { transform: translateY(1px); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
 
 /* ---------- Stage ---------- */
@@ -359,7 +360,7 @@ html, body {
   border: var(--line) solid var(--hair);
   backface-visibility: hidden;
   overflow: hidden;
-  box-shadow: 0 22px 44px rgba(0,0,0,0.32), 0 2px 6px rgba(0,0,0,0.22);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.30);
 }
 /* depth shading via overlay (a CSS filter here would break backface-visibility) */
 .face::after {
@@ -394,19 +395,6 @@ html, body {
   place-items: center;
   box-shadow: 0 6px 16px rgba(0,0,0,0.3), inset 0 0 0 3px rgba(156,122,69,0.25);
 }
-/* notch punched into top edge like a rolodex card */
-.face.front::before {
-  content: "";
-  position: absolute;
-  top: -1px; left: 50%;
-  width: 62px; height: 15px;
-  transform: translateX(-50%);
-  background: var(--paper-2);
-  border: var(--line) solid var(--hair);
-  border-top: none;
-  border-radius: 0 0 10px 10px;
-  z-index: 2;
-}
 /* accent stripe down the left edge, like a rolodex card */
 .face.front .accent {
   position: absolute;
@@ -432,7 +420,6 @@ html, body {
   display: grid;
   place-items: center;
   font-family: var(--serif);
-  font-variant: small-caps;
   font-weight: 600;
   font-size: 22px;
   letter-spacing: 1px;
@@ -442,10 +429,9 @@ html, body {
 .who { min-width: 0; }
 .name {
   font-family: var(--serif);
-  font-variant: small-caps;
   font-weight: 600;
   font-size: 25px;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.2px;
   line-height: 1.1;
   color: var(--ink);
   text-shadow: 0 1px 0 rgba(255,255,255,0.5);
@@ -453,9 +439,8 @@ html, body {
 }
 .title {
   font-family: var(--serif);
-  font-variant: small-caps;
   font-size: 14px;
-  letter-spacing: 2px;
+  letter-spacing: 0.2px;
   color: var(--ink-soft);
   margin-top: 2px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -497,10 +482,9 @@ html, body {
   position: absolute;
   top: 16px; left: 22px;
   font-family: var(--serif);
-  font-variant: small-caps;
   font-size: 26px;
   font-weight: 600;
-  letter-spacing: 2px;
+  letter-spacing: 0.2px;
   color: var(--ink);
 }
 .card.divider .big {
@@ -526,8 +510,7 @@ html, body {
   font-family: var(--serif);
   font-size: 33px;
   font-weight: 600;
-  font-variant: small-caps;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.2px;
   line-height: 1.12;
   color: var(--ink);
   text-shadow: 0 1px 0 rgba(255,255,255,0.5);
@@ -552,12 +535,12 @@ html, body {
   letter-spacing: 0.5px;
   color: var(--ink);
 }
-.home-search-input::placeholder { color: #a89f8c; font-variant: small-caps; letter-spacing: 1px; }
+.home-search-input::placeholder { color: #a89f8c; letter-spacing: 1px; }
 .home-time {
   font-family: var(--serif);
   font-size: 15px;
   font-weight: 600;
-  letter-spacing: 4px;
+  letter-spacing: 0.2px;
   color: var(--ink-soft);
   text-align: right;
 }
@@ -635,11 +618,10 @@ body[data-tod="dusk"] .alpha-rail .alpha.empty { color: #55503f; }
 .alpha-rail .alpha {
   font-family: var(--serif);
   font-size: 13px;
-  font-variant: small-caps;
 }
 .alpha-rail .alpha.active {
-  background: linear-gradient(180deg, #d2bb9f, #c6ac8f);
-  color: var(--ink);
+  background: linear-gradient(180deg, #8a2310, #6f1a07);
+  color: #f3ece1;
   border: 1px solid var(--brass-deep);
   font-weight: 600;
   transform: scale(1.5);
@@ -662,21 +644,20 @@ body[data-tod="dusk"] .alpha-rail .alpha.empty { color: #55503f; }
   width: 46px; height: 46px;
   border-radius: 6px;
   border: 1px solid var(--ink);
-  background: linear-gradient(180deg, #2b3d47, #142128);
+  background: #6f1a07;
   color: var(--paper-2);
   font-size: 15px;
   cursor: pointer;
   box-shadow: 0 3px 10px rgba(0,0,0,0.28);
   transition: transform .08s ease, box-shadow .12s ease, background .15s ease;
 }
-.nav-btn:hover { background: linear-gradient(180deg, #354a56, #1d2e36); }
+.nav-btn:hover { background: #8a2310; }
 .nav-btn:active { transform: translateY(1px); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
 .counter {
   font-family: var(--serif);
-  font-variant: small-caps;
   font-weight: 600;
   font-size: 18px;
-  letter-spacing: 2px;
+  letter-spacing: 0.2px;
   min-width: 64px;
   text-align: center;
   color: var(--ink);
@@ -768,12 +749,11 @@ body[data-tod="dusk"] .counter {
 }
 .detail-name {
   font-family: var(--serif);
-  font-variant: small-caps;
-  font-size: 32px; font-weight: 600; letter-spacing: 1.5px; line-height: 1.05;
+  font-size: 32px; font-weight: 600; letter-spacing: 0.2px; line-height: 1.05;
 }
 .detail-sub {
-  font-family: var(--serif); font-variant: small-caps;
-  font-size: 16px; letter-spacing: 1.5px; color: var(--ink-soft); margin-top: 3px;
+  font-family: var(--serif);
+  font-size: 16px; letter-spacing: 0.2px; color: var(--ink-soft); margin-top: 3px;
 }
 
 .detail-content {
@@ -824,7 +804,7 @@ body[data-tod="dusk"] .counter {
 .btn:active { transform: translate(3px,3px); box-shadow: 0 0 0 rgba(20,23,26,0.9); }
 .btn-edit, .btn-save { background: var(--blue); }
 .btn-edit:hover, .btn-save:hover { background: var(--blue-deep); }
-.btn-delete, .btn-danger { background: #EB6F63; color: #fff; }
+.btn-delete, .btn-danger { background: #9e2b1c; color: #fff; }
 
 /* edit form */
 .detail-form .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
@@ -958,7 +938,7 @@ body[data-tod="dusk"] .counter {
   width: 26px; height: 26px;
   border-radius: 50%;
   border: 2px solid var(--ink);
-  background: #EB6F63; color: #fff;
+  background: #9e2b1c; color: #fff;
   font-size: 12px; font-weight: 700;
   cursor: pointer;
   box-shadow: 2px 2px 0 rgba(20,23,26,0.9);
@@ -1045,8 +1025,7 @@ body[data-tod="dusk"] .counter {
 }
 .auth-title {
   font-family: var(--serif);
-  font-variant: small-caps;
-  font-size: 30px; font-weight: 600; letter-spacing: 4px;
+  font-size: 30px; font-weight: 600; letter-spacing: 0.2px;
   color: var(--ink);
 }
 .auth-input {
@@ -1069,23 +1048,21 @@ body[data-tod="dusk"] .counter {
   font-family: var(--serif);
   font-size: 16px;
   font-weight: 600;
-  font-variant: small-caps;
-  letter-spacing: 2px;
+  letter-spacing: 0.2px;
   color: var(--paper-2);
-  background: linear-gradient(180deg, #2b3d47, #142128);
+  background: #6f1a07;
   border: 1px solid var(--ink);
   border-radius: 4px;
   cursor: pointer;
   transition: transform .08s ease, background .15s ease;
 }
-.auth-btn:hover { background: linear-gradient(180deg, #354a56, #1d2e36); }
+.auth-btn:hover { background: #8a2310; }
 .auth-btn:active { transform: translateY(1px); }
 .auth-btn:disabled { opacity: 0.6; cursor: default; }
 .auth-error {
   margin-top: -6px;
   font-family: var(--serif);
   font-size: 14px;
-  font-variant: small-caps;
   letter-spacing: 1px;
   color: #b0402f;
 }

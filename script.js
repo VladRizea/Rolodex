@@ -22,7 +22,7 @@ function shape(pos) {
   return pos - EXTRA * ease;
 }
 
-const LOGO_SVG = `<img src="images/logo.jpg" alt="Rolodex" />`;
+const LOGO_SVG = `<img src="logo.jpg" alt="Rolodex" />`;
 
 // ---------- Contact helpers ----------
 const lastName = c => (c.fullName || "").trim().split(/\s+/).slice(-1)[0] || "";
@@ -150,6 +150,7 @@ function buildCardEl(it) {
 function buildReel(contacts) {
   const sorted = [...contacts].sort((a, b) =>
     lastName(a).localeCompare(lastName(b)) || (a.fullName || "").localeCompare(b.fullName || ""));
+  sorted.reverse();   // reversed running order, per request
   items = [];
   Object.keys(byId).forEach(k => delete byId[k]);
   for (const c of sorted) {
@@ -405,7 +406,8 @@ function renderSky(tod) {
     sky.appendChild(moon);
 
     const frag = document.createDocumentFragment();
-    for (let i = 0; i < 90; i++) {
+    const count = window.matchMedia("(max-width: 640px)").matches ? 32 : 60;
+    for (let i = 0; i < count; i++) {
       const s = document.createElement("div");
       s.className = "star";
       const size = (Math.random() * 1.8 + 0.8).toFixed(2);
